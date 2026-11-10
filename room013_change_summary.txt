@@ -1,0 +1,80 @@
+ROOM 13 (GIRL'S ROOM) - SUMMARY OF CHANGES
+==========================================
+
+Compared:  original scripts/room/room013.js (4920 lines)
+     vs:   room013_1.js (4928 lines)
+Result:    13 changed lines in 6 places. Everything else is identical.
+Check:     room013_1.js passes a Node.js syntax check (node --check).
+Line numbers below refer to the NEW file (room013_1.js).
+
+
+CHANGES
+-------
+
+1. Lola chat - fallback after her talk mission is done
+   Line 543 (added)
+       default: chat(24, 13); break;
+   Added to the switch on sc.taskGetStep("lola", "talk") in the "lolachat"
+   handler. Once the talk mission is complete the step is 3, which had no
+   case, so clicking Lola did nothing. It now plays chat 24, her stock line
+   ("Hehe. Love your style.").
+
+2. Eva chat - break fix and fallback after her talk mission is done
+   Line 556 (modified)
+       before: case 1: chat(33, 13);
+       after:  case 1: chat(33, 13); break;
+   Line 557 (added)
+       default: chat(46, 13); break;
+   Added to the switch on sc.taskGetStep("eva", "talk") in the "evachat"
+   handler. "case 1" now has a break, and clicking Eva after her talk
+   mission is complete plays chat 46, her stock insult line, instead of
+   doing nothing.
+
+3. Eva talk - evatalk1 now completes the correct task
+   Line 1619 (modified)
+       before: sc.completeMissionTask("eva", "talk", 0, true);
+       after:  sc.completeMissionTask("eva", "talk", 1, true);
+   evatalk1 is reached from the end of chat 39 ("Feet?!"). It used to
+   complete task 0 a second time, so task 1 could never complete. It now
+   completes task 1.
+
+4. Eva talk - mission marked complete
+   Line 1620 (added)
+       sc.completeMission("eva", "talk", true);
+   Marks Eva's "Get to know her better" mission complete along with task 1.
+
+5. Lola talk - new talkLola2 callback
+   Lines 1638-1642 (added, directly after talkLola1)
+       case "talkLola2":
+           sc.completeMissionTask("lola", "talk", 2, true);
+           sc.completeMission("lola", "talk", true);
+           char.room(13);
+           break;
+   Completes Lola's talk task 2 ("Massages") and her talk mission, then
+   reloads room 13.
+
+6. Lola talk - chat 18 now triggers talkLola2
+   Line 2320 (modified)
+       before: { chatID: -1, text: "Hey", callback: "" },
+       after:  { chatID: -1, text: "Hey", callback: "talkLola2" },
+   The "Hey" button that ends chat 18 (Eva's firefighter reply, reached from
+   chat 17) now fires talkLola2, so finishing that scene completes the task.
+
+
+CHANGES SINCE THE PREVIOUS UPLOAD (room013.js -> room013_1.js)
+--------------------------------------------------------------
+Only change 2 is new (lines 556-557). It closes the gap noted last time:
+Eva's chat had no fallback after her mission completed.
+Changes 1, 3, 4, 5 and 6 are unchanged from the previous upload.
+
+
+NOTES
+-----
+- Style: the added lines (543, 557, 1620, 1638-1642) use tab indentation
+  while the rest of the file uses spaces. This does not affect behavior.
+- Testing: both talk tasks are gated by once-a-day flags (lolatalk and
+  evatalk), so a day must pass between each conversation when testing.
+  Existing saves where Lola's task 2 or Eva's task 1 is still at 0 will
+  complete them the next time the scene is played.
+- Lola's chat 17 plays only if the massage mission's first task ("Back
+  Rub") is done; otherwise her chat replays the sore-back scene (chat 14).
